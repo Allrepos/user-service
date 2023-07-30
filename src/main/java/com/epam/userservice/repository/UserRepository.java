@@ -1,14 +1,16 @@
 package com.epam.userservice.repository;
 
-import com.epam.userservice.entity.UserDao;
+import com.epam.userservice.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
 
 @Repository
-public interface UserRepository extends JpaRepository<UserDao, Integer> {
+public interface UserRepository extends JpaRepository<User, Long> {
+  Optional<User> findByUsername(String username);
 
-    Optional<UserDao> findByEmailId(String emailId);
+  Boolean existsByUsername(String username);
 
+  Boolean existsByEmail(String email);
 }
