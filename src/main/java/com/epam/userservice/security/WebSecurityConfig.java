@@ -68,18 +68,6 @@ public class WebSecurityConfig { // extends WebSecurityConfigurerAdapter {
     return new BCryptPasswordEncoder();
   }
 
-//  @Override
-//  protected void configure(HttpSecurity http) throws Exception {
-//    http.cors().and().csrf().disable()
-//      .exceptionHandling().authenticationEntryPoint(unauthorizedHandler).and()
-//      .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS).and()
-//      .authorizeRequests().antMatchers("/api/auth/**").permitAll()
-//      .antMatchers("/api/test/**").permitAll()
-//      .anyRequest().authenticated();
-//
-//    http.addFilterBefore(authenticationJwtTokenFilter(), UsernamePasswordAuthenticationFilter.class);
-//  }
-  
   @Bean
   public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
     http.csrf(csrf -> csrf.disable())
@@ -89,10 +77,12 @@ public class WebSecurityConfig { // extends WebSecurityConfigurerAdapter {
         .authorizeHttpRequests(auth ->
           auth.requestMatchers("/api/auth/**").permitAll() //
               .requestMatchers("/api/test/**").permitAll()  //
+                  .requestMatchers(("/api/auth/signup")).permitAll()
+                  .requestMatchers(("/api/auth/signin")).permitAll()
                   .requestMatchers("http://localhost:4200/register/**").permitAll()
               .anyRequest().authenticated()
         );
-    
+    //http://localhost:8080/api/auth/signup
     http.authenticationProvider(authenticationProvider());
 
     http.addFilterBefore(authenticationJwtTokenFilter(), UsernamePasswordAuthenticationFilter.class);
@@ -111,22 +101,5 @@ public class WebSecurityConfig { // extends WebSecurityConfigurerAdapter {
     return new CorsFilter(source);
   }
 
-  /*@Bean
-  public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-    http.csrf(csrf -> csrf.disable())
-            .exceptionHandling(exception -> exception.authenticationEntryPoint(unauthorizedHandler))
-            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            .authorizeRequests(auth ->
-                    auth.antMatchers("/api/auth/**").permitAll()
-                            .antMatchers("/api/test/**").permitAll()
-                            .anyRequest().authenticated()
-            );
-
-    http.authenticationProvider(authenticationProvider());
-
-    http.addFilterBefore(authenticationJwtTokenFilter(), UsernamePasswordAuthenticationFilter.class);
-
-    return http.build();
-  }*/
 }
 

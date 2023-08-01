@@ -31,5 +31,5 @@ public class UserDao {
     private String panNumber;
 
     @Column(name = "USER_BANK_ACCOUNT_NUMBER")
-    private int bankAccountNumber;
+    private String bankAccountNumber;
 }

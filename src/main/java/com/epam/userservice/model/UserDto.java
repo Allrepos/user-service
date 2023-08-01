@@ -1,10 +1,13 @@
 package com.epam.userservice.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Getter;
 import lombok.Setter;
 
 @Getter
 @Setter
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class UserDto {
 
     private String emailId;
@@ -17,5 +20,5 @@ public class UserDto {
 
     private String panNumber;
 
-    private int bankAccountNumber;
+    private String bankAccountNumber;
 }

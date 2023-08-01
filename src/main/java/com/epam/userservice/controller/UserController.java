@@ -1,18 +1,21 @@
 package com.epam.userservice.controller;
 
+import com.epam.userservice.entity.UserDao;
 import com.epam.userservice.model.ERole;
 import com.epam.userservice.model.Role;
 import com.epam.userservice.model.User;
 import com.epam.userservice.model.UserDto;
 import com.epam.userservice.repository.RoleRepository;
 import com.epam.userservice.repository.UserRepository;
+import com.epam.userservice.repository.UserRepositoryData;
 import com.epam.userservice.request.LoginRequest;
 import com.epam.userservice.request.SignupRequest;
 import com.epam.userservice.response.JwtResponse;
 import com.epam.userservice.response.MessageResponse;
-import com.epam.userservice.security.UserDetailsImpl;
 import com.epam.userservice.security.jwt.JwtUtils;
+import com.epam.userservice.security.services.UserDetailsImpl;
 import com.epam.userservice.service.UserService;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
@@ -45,7 +48,13 @@ public class UserController {
     UserRepository userRepository;
 
     @Autowired
+    UserRepositoryData userRepositoryData;
+
+    @Autowired
     RoleRepository roleRepository;
+
+    @Autowired
+    private ObjectMapper objectMapper;
 
     @Autowired
     PasswordEncoder encoder;
@@ -54,7 +63,7 @@ public class UserController {
     @Autowired
     private UserService userService;
 
-    @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping("/rqw")
     public String getSomeThing() {
         return "Hello this is working";
     }
@@ -83,11 +92,10 @@ public class UserController {
     public ResponseEntity<?> authenticateUser(@Valid @RequestBody LoginRequest loginRequest) {
 
         Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword()));
+                new UsernamePasswordAuthenticationToken(loginRequest.getEmailId(), loginRequest.getPassword()));
 
         SecurityContextHolder.getContext().setAuthentication(authentication);
         String jwt = jwtUtils.generateJwtToken(authentication);
-
         UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
         List<String> roles = userDetails.getAuthorities().stream()
                 .map(item -> item.getAuthority())
@@ -101,22 +109,27 @@ public class UserController {
     }
 
     @PostMapping("/signup")
-    public ResponseEntity<?> registerUser(@Valid @RequestBody SignupRequest signUpRequest) {
-        if (userRepository.existsByUsername(signUpRequest.getUsername())) {
+    public ResponseEntity<?> registerUser( @RequestBody SignupRequest signUpRequest) {
+//       User user = new User(signUpRequest.getFirstName(),
+//                signUpRequest.getEmailId(),
+//                encoder.encode(signUpRequest.getPassword()));
+      if (userRepository.existsByUsername(signUpRequest.getFirstName())) {
             return ResponseEntity
                     .badRequest()
                     .body(new MessageResponse("Error: Username is already taken!"));
         }
 
-        if (userRepository.existsByEmail(signUpRequest.getEmail())) {
+        if (userRepository.existsByEmail(signUpRequest.getEmailId())) {
             return ResponseEntity
                     .badRequest()
                     .body(new MessageResponse("Error: Email is already in use!"));
         }
-
+        System.out.println("+++++++++++++++++++++++++++++++++++++++++++");
+        System.out.println(signUpRequest.getRole());
+        System.out.println("+++++++++++++++++++++++++++++++++++++++++++");
         // Create new user's account
-        User user = new User(signUpRequest.getUsername(),
-                signUpRequest.getEmail(),
+        User user = new User(signUpRequest.getFirstName(),
+                signUpRequest.getEmailId(),
                 encoder.encode(signUpRequest.getPassword()));
 
         Set<String> strRoles = signUpRequest.getRole();
@@ -150,6 +163,8 @@ public class UserController {
         }
 
         user.setRoles(roles);
+        UserDao userDao = objectMapper.convertValue(signUpRequest, UserDao.class);
+        userRepositoryData.save(userDao);
         userRepository.save(user);
 
         return ResponseEntity.ok(new MessageResponse("User registered successfully!"));
